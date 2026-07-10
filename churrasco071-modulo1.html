@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Clube do Churrasco 071 — Sistema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0b0b0c;
+    --charcoal:#1c1815;
+    --charcoal-2:#241f1b;
+    --gold:#c9a227;
+    --gold-bright:#e8c468;
+    --cream:#ede6d6;
+    --cream-dim:#a89f8d;
+    --ember:#7a2e2e;
+    --ember-bright:#a63f3f;
+    --ok:#4f8a5b;
+    --line: rgba(201,162,39,0.18);
+    --radius: 10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--black);
+    color:var(--cream);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .display{ font-family:'Fraunces', serif; }
+  ::selection{ background:var(--gold); color:var(--black); }
+  :focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
+
+  /* ---------- knife-cut divider (signature element) ---------- */
+  .cut-divider{
+    position:relative;
+    height:14px;
+    width:100%;
+    overflow:hidden;
+    margin: 4px 0;
+  }
+  .cut-divider svg{ width:100%; height:100%; display:block; }
+
+  /* ---------- LOGIN SCREEN ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+  }
+  @media (max-width: 860px){
+    #login-screen{ grid-template-columns: 1fr; }
+    .brand-panel{ min-height:38vh; }
+  }
+  .brand-panel{
+    position:relative;
+    background:
+      radial-gradient(ellipse 60% 50% at 30% 100%, rgba(122,46,46,0.35), transparent 70%),
+      radial-gradient(ellipse 45% 40% at 75% 85%, rgba(201,162,39,0.12), transparent 70%),
+      var(--black);
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 8vw;
+    overflow:hidden;
+  }
+  .ember-field{ position:absolute; inset:0; pointer-events:none; }
+  .ember-dot{
+    position:absolute; bottom:-10px; border-radius:50%;
+    background: radial-gradient(circle, var(--gold-bright), var(--ember) 70%, transparent 100%);
+    opacity:0; filter: blur(0.3px);
+    animation: rise 7s linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    8%{ opacity:0.85; }
+    100%{ transform:translateY(-92vh) translateX(var(--drift,20px)); opacity:0; }
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--gold);
+    margin-bottom:18px;
+    z-index:1;
+  }
+  .wordmark{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(2.4rem, 5vw, 4.2rem);
+    line-height:1.02;
+    color:var(--cream);
+    z-index:1;
+  }
+  .wordmark span{ color:var(--gold); font-style:italic; font-weight:400; }
+  .wordmark .num{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:0.32em;
+    letter-spacing:0.1em;
+    color:var(--ember-bright);
+    margin-top:10px;
+  }
+  .tagline{
+    margin-top:22px; max-width:38ch;
+    color:var(--cream-dim); font-size:15px; line-height:1.6;
+    z-index:1;
+  }
+
+  .form-panel{
+    display:flex; align-items:center; justify-content:center;
+    background: var(--charcoal);
+    padding: 6vw;
+  }
+  .login-card{ width:100%; max-width:400px; }
+  .login-card h2{
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.6rem;
+    margin-bottom:6px;
+  }
+  .login-card .sub{ color:var(--cream-dim); font-size:14px; margin-bottom:28px; }
+
+  .role-grid{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;
+    margin-bottom:24px;
+  }
+  .role-pill{
+    border:1px solid var(--line);
+    background:var(--charcoal-2);
+    color:var(--cream-dim);
+    padding:10px 6px;
+    border-radius:var(--radius);
+    font-size:12px;
+    text-align:center;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .role-pill:hover{ border-color:var(--gold); color:var(--cream); }
+  .role-pill.active{
+    background: linear-gradient(155deg, var(--gold) 0%, #a9821e 100%);
+    color:var(--black); border-color:var(--gold); font-weight:600;
+  }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; color:var(--cream-dim); margin-bottom:6px; letter-spacing:0.02em; }
+  .field input{
+    width:100%; padding:12px 14px;
+    background:var(--charcoal-2); border:1px solid var(--line);
+    border-radius:var(--radius); color:var(--cream); font-size:14px;
+    font-family:'Inter',sans-serif;
+  }
+  .field input:focus{ border-color:var(--gold); }
+
+  .btn-primary{
+    width:100%; padding:13px; border:none; border-radius:var(--radius);
+    background: linear-gradient(155deg, var(--gold-bright) 0%, var(--gold) 55%, #a9821e 100%);
+    color:var(--black); font-weight:700; font-size:14px; letter-spacing:0.02em;
+    cursor:pointer; margin-top:8px;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(201,162,39,0.25); }
+  .btn-primary:active{ transform:translateY(0); }
+
+  .error-msg{
+    display:none; background:rgba(122,46,46,0.2); border:1px solid var(--ember);
+    color:#e8b3b3; font-size:13px; padding:10px 12px; border-radius:var(--radius);
+    margin-bottom:16px;
+  }
+  .hint{ margin-top:20px; font-size:11.5px; color:var(--cream-dim); line-height:1.6; }
+  .hint b{ color:var(--gold); }
+
+  /* ---------- APP / DASHBOARD ---------- */
+  #app-screen{ display:none; min-height:100vh; grid-template-columns: 240px 1fr; }
+  @media (max-width: 900px){
+    #app-screen{ grid-template-columns: 1fr; }
+    .sidebar{ position:fixed; z-index:40; height:100vh; transform:translateX(-100%); transition:transform .2s ease; }
+    .sidebar.open{ transform:translateX(0); }
+    .menu-toggle{ display:flex !important; }
+  }
+
+  .sidebar{
+    background:var(--charcoal); border-right:1px solid var(--line);
+    padding:24px 16px; display:flex; flex-direction:column;
+  }
+  .side-logo{ display:flex; align-items:center; gap:10px; padding:0 8px 22px; border-bottom:1px solid var(--line); margin-bottom:18px; }
+  .side-logo .mark{
+    width:34px; height:34px; border-radius:8px;
+    background:linear-gradient(155deg, var(--gold-bright), var(--gold) 60%, #8a6b18);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:900; color:var(--black); font-size:16px;
+    flex-shrink:0;
+  }
+  .side-logo .txt{ font-family:'Fraunces', serif; font-weight:700; font-size:14px; line-height:1.2; }
+  .side-logo .txt small{ display:block; font-family:'JetBrains Mono',monospace; color:var(--ember-bright); font-size:10px; letter-spacing:0.08em; }
+
+  .nav-section-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--cream-dim); margin:16px 8px 8px; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px;
+    padding:10px 10px; border-radius:8px; color:var(--cream-dim);
+    font-size:13.5px; cursor:pointer; margin-bottom:2px;
+    transition: background .12s ease, color .12s ease;
+  }
+  .nav-item svg{ width:17px; height:17px; flex-shrink:0; opacity:0.85; }
+  .nav-item:hover{ background:var(--charcoal-2); color:var(--cream); }
+  .nav-item.active{ background: rgba(201,162,39,0.14); color:var(--gold-bright); }
+  .nav-item.active svg{ opacity:1; }
+  .nav-item.locked{ opacity:0.35; cursor:not-allowed; }
+  .nav-item.locked:hover{ background:none; color:var(--cream-dim); }
+  .lock-tag{ margin-left:auto; font-size:9px; font-family:'JetBrains Mono',monospace; }
+
+  .sidebar-footer{ margin-top:auto; padding-top:16px; border-top:1px solid var(--line); }
+  .user-chip{ display:flex; align-items:center; gap:10px; padding:8px; }
+  .user-chip .avatar{
+    width:32px; height:32px; border-radius:50%; background:var(--ember);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px;
+    flex-shrink:0;
+  }
+  .user-chip .info{ line-height:1.3; overflow:hidden; }
+  .user-chip .name{ font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .user-chip .role{ font-size:10.5px; color:var(--gold); text-transform:uppercase; letter-spacing:0.04em; }
+  .logout-btn{
+    width:100%; margin-top:10px; padding:9px; background:none;
+    border:1px solid var(--line); border-radius:8px; color:var(--cream-dim);
+    font-size:12px; cursor:pointer;
+  }
+  .logout-btn:hover{ border-color:var(--ember-bright); color:#e8b3b3; }
+
+  .main{ padding: 22px 28px 60px; max-width:1400px; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:26px; flex-wrap:wrap; gap:12px; }
+  .menu-toggle{
+    display:none; width:36px; height:36px; border-radius:8px; background:var(--charcoal-2);
+    border:1px solid var(--line); color:var(--cream); align-items:center; justify-content:center; cursor:pointer;
+  }
+  .greeting h1{ font-family:'Fraunces', serif; font-size:1.5rem; font-weight:600; }
+  .greeting p{ color:var(--cream-dim); font-size:13px; margin-top:2px; }
+  .date-badge{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--gold);
+    border:1px solid var(--line); padding:8px 12px; border-radius:8px; background:var(--charcoal);
+  }
+
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:14px; margin-bottom:22px; }
+  .kpi-card{
+    background:var(--charcoal); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; position:relative; overflow:hidden;
+  }
+  .kpi-card::before{
+    content:''; position:absolute; top:0; left:0; width:3px; height:100%;
+    background:var(--gold);
+  }
+  .kpi-card.ember::before{ background:var(--ember-bright); }
+  .kpi-card .label{ font-size:11.5px; color:var(--cream-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+  .kpi-card .value{ font-family:'JetBrains Mono',monospace; font-size:1.7rem; font-weight:700; color:var(--cream); }
+  .kpi-card .value.gold{ color:var(--gold-bright); }
+  .kpi-card .delta{ font-size:11.5px; margin-top:8px; color:var(--ok); }
+  .kpi-card .delta.down{ color:var(--ember-bright); }
+
+  .grid-2{ display:grid; grid-template-columns: 1.4fr 1fr; gap:16px; margin-bottom:16px; }
+  @media(max-width:1000px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .panel{ background:var(--charcoal); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
+  .panel h3{ font-family:'Fraunces',serif; font-size:1.05rem; font-weight:600; margin-bottom:2px; }
+  .panel .panel-sub{ font-size:12px; color:var(--cream-dim); margin-bottom:16px; }
+
+  #salesChart{ width:100%; height:220px; display:block; }
+
+  .rank-list{ list-style:none; }
+  .rank-list li{
+    display:flex; align-items:center; gap:10px; padding:9px 0;
+    border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .rank-list li:last-child{ border-bottom:none; }
+  .rank-num{
+    width:22px; height:22px; border-radius:6px; background:var(--charcoal-2);
+    display:flex; align-items:center; justify-content:center; font-size:11px;
+    font-family:'JetBrains Mono',monospace; color:var(--gold); flex-shrink:0;
+  }
+  .rank-name{ flex:1; }
+  .rank-val{ font-family:'JetBrains Mono',monospace; color:var(--cream-dim); font-size:12px; }
+
+  .stock-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .stock-row:last-child{ border-bottom:none; }
+  .stock-dot{ width:8px; height:8px; border-radius:50%; background:var(--ember-bright); flex-shrink:0; }
+  .stock-name{ flex:1; }
+  .stock-qty{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ember-bright); }
+
+  .pay-methods{ display:flex; gap:10px; flex-wrap:wrap; }
+  .pay-chip{
+    flex:1; min-width:90px; text-align:center; background:var(--charcoal-2);
+    border:1px solid var(--line); border-radius:8px; padding:12px 8px;
+  }
+  .pay-chip .pct{ font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--gold-bright); font-size:1.1rem; }
+  .pay-chip .lbl{ font-size:11px; color:var(--cream-dim); margin-top:3px; }
+
+  .locked-banner{
+    margin-top:6px; font-size:12px; color:var(--cream-dim);
+    border:1px dashed var(--line); border-radius:8px; padding:10px 12px;
+  }
+
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:35; display:none; }
+  .overlay.show{ display:block; }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="login-screen">
+  <div class="brand-panel">
+    <div class="ember-field" id="emberField"></div>
+    <div class="eyebrow">Sistema de Gestão · Acesso Restrito</div>
+    <div class="wordmark">
+      Clube do<br><span>Churrasco</span>
+      <span class="num">Nº 071 — AÇOUGUE PREMIUM &amp; VAREJO</span>
+    </div>
+    <div class="cut-divider">
+      <svg viewBox="0 0 400 14" preserveAspectRatio="none"><path d="M0,7 L120,2 L160,12 L400,7" stroke="#c9a227" stroke-width="1" fill="none" opacity="0.5"/></svg>
+    </div>
+    <p class="tagline">Comanda por cliente, sem mesas. Escaneie o QR Code e o atendimento começa — do balcão ao caixa, em um único fluxo.</p>
+  </div>
+
+  <div class="form-panel">
+    <div class="login-card">
+      <h2>Entrar no sistema</h2>
+      <p class="sub">Informe seu usuário e senha — o perfil é identificado automaticamente.</p>
+
+      <div class="error-msg" id="errorMsg">Usuário ou senha inválidos.</div>
+
+      <div class="field">
+        <label for="userInput">Usuário</label>
+        <input type="text" id="userInput" placeholder="ex: admin" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="passInput">Senha</label>
+        <input type="password" id="passInput" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="loginBtn">Entrar</button>
+
+      <div class="hint">
+        <b>Demo módulo 1 — sem backend ainda.</b> Use usuário <b>admin</b>, <b>atendente1</b> ou <b>atendente2</b>, senha <b>071071</b>. Login real (Firebase) entra no próximo módulo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP / DASHBOARD ================= -->
+<div id="app-screen">
+  <div class="overlay" id="overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="side-logo">
+      <div class="mark">071</div>
+      <div class="txt">Clube do Churrasco<small>PAINEL DE GESTÃO</small></div>
+    </div>
+
+    <div class="nav-section-label">Operação</div>
+    <div class="nav-item active" data-mod="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item locked" data-mod="comanda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h1M15 8h1M8 15h1M15 15h1"/></svg>
+      Comanda (QR Code) <span class="lock-tag mono">M2</span>
+    </div>
+    <div class="nav-item locked" data-mod="produtos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7L12 3 4 7v10l8 4 8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>
+      Produtos <span class="lock-tag mono">M2</span>
+    </div>
+    <div class="nav-item locked" data-mod="caixa">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M8 15h3"/></svg>
+      Caixa <span class="lock-tag mono">M3</span>
+    </div>
+    <div class="nav-item locked" data-mod="estoque">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg>
+      Estoque <span class="lock-tag mono">M4</span>
+    </div>
+
+    <div class="nav-section-label">Análise</div>
+    <div class="nav-item locked" data-mod="relatorios">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M8 19V9m4 10V5m4 14v-7"/></svg>
+      Relatórios <span class="lock-tag mono">M6</span>
+    </div>
+    <div class="nav-item locked" data-mod="clientes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6"/></svg>
+      Clientes <span class="lock-tag mono">M6</span>
+    </div>
+    <div class="nav-item locked" data-mod="config">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.9 7.9 0 000-3l1.9-1.5-2-3.4-2.3.6a8 8 0 00-2.6-1.5L14 2h-4l-.4 2.7a8 8 0 00-2.6 1.5l-2.3-.6-2 3.4L4.6 10.5a7.9 7.9 0 000 3L2.7 15l2 3.4 2.3-.6a8 8 0 002.6 1.5L10 22h4l.4-2.7a8 8 0 002.6-1.5l2.3.6 2-3.4-1.9-1.5z"/></svg>
+      Configurações <span class="lock-tag mono">M6</span>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="avatarInitial">A</div>
+        <div class="info">
+          <div class="name" id="userName">—</div>
+          <div class="role" id="userRole">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Sair</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="menu-toggle" id="menuToggle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </div>
+        <div class="greeting">
+          <h1 id="greetingTitle">Bom dia, Administrador</h1>
+          <p>Visão geral do Clube do Churrasco 071 — hoje</p>
+        </div>
+      </div>
+      <div class="date-badge" id="dateBadge">—</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Vendas hoje</div>
+        <div class="value">47</div>
+        <div class="delta">↑ 12% vs. ontem</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Faturamento hoje</div>
+        <div class="value gold mono">R$ 6.284,90</div>
+        <div class="delta">↑ 8% vs. ontem</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Clientes atendidos</div>
+        <div class="value">39</div>
+        <div class="delta">ticket médio R$ 161,15</div>
+      </div>
+      <div class="kpi-card ember">
+        <div class="label">Estoque baixo</div>
+        <div class="value" style="color:var(--ember-bright)">5 itens</div>
+        <div class="delta down">requer reposição</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Caixa</div>
+        <div class="value" style="font-size:1.3rem; color:var(--ok);">● Aberto</div>
+        <div class="delta">desde 08:02 — Caixa 01</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Vendas da semana</h3>
+        <p class="panel-sub">Faturamento por dia (últimos 7 dias)</p>
+        <canvas id="salesChart"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Produtos mais vendidos</h3>
+        <p class="panel-sub">Hoje, por quantidade</p>
+        <ul class="rank-list" id="topProducts"></ul>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Formas de pagamento</h3>
+        <p class="panel-sub">Distribuição do faturamento de hoje</p>
+        <div class="pay-methods">
+          <div class="pay-chip"><div class="pct">42%</div><div class="lbl">PIX</div></div>
+          <div class="pay-chip"><div class="pct">28%</div><div class="lbl">Débito</div></div>
+          <div class="pay-chip"><div class="pct">21%</div><div class="lbl">Crédito</div></div>
+          <div class="pay-chip"><div class="pct">9%</div><div class="lbl">Dinheiro</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Estoque baixo</h3>
+        <p class="panel-sub">Itens abaixo do mínimo cadastrado</p>
+        <div id="lowStockList"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Próximos módulos</h3>
+      <p class="locked-banner">Comanda por QR Code, cadastro de produtos, caixa, estoque, integração com balança/impressora e relatórios entram nos próximos módulos, seguindo o mesmo padrão visual.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ---------- Ember particles (brand panel) ----------
+  const emberField = document.getElementById('emberField');
+  for(let i=0;i<22;i++){
+    const d = document.createElement('div');
+    d.className = 'ember-dot';
+    const size = 2 + Math.random()*4;
+    d.style.width = size+'px';
+    d.style.height = size+'px';
+    d.style.left = (Math.random()*90+2)+'%';
+    d.style.setProperty('--drift', (Math.random()*40-20)+'px');
+    d.style.animationDelay = (Math.random()*7)+'s';
+    d.style.animationDuration = (5+Math.random()*4)+'s';
+    emberField.appendChild(d);
+  }
+
+  // ---------- Login logic ----------
+  // Apenas 2 perfis: Administrador (1 conta) e Atendente (até 2 contas).
+  const DEMO_USERS = {
+    admin:'Administrador',
+    atendente1:'Atendente',
+    atendente2:'Atendente'
+  };
+  const DEMO_PASS = '071071';
+
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  document.getElementById('passInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+  function doLogin(){
+    const user = document.getElementById('userInput').value.trim().toLowerCase();
+    const pass = document.getElementById('passInput').value;
+    const errBox = document.getElementById('errorMsg');
+
+    const role = DEMO_USERS[user];
+    if(!role || pass !== DEMO_PASS){
+      errBox.style.display = 'block';
+      return;
+    }
+    errBox.style.display = 'none';
+    enterApp(user, role);
+  }
+
+  function enterApp(user, role){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'grid';
+
+    const DISPLAY_NAMES = { admin:'Administrador', atendente1:'Atendente 1', atendente2:'Atendente 2' };
+    document.getElementById('userName').textContent = DISPLAY_NAMES[user] || (user.charAt(0).toUpperCase()+user.slice(1));
+    document.getElementById('userRole').textContent = role;
+    document.getElementById('avatarInitial').textContent = user.charAt(0).toUpperCase();
+
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    document.getElementById('greetingTitle').textContent = `${greet}, ${role}`;
+
+    const today = new Date();
+    document.getElementById('dateBadge').textContent = today.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short' });
+
+    applyRolePermissions(role);
+    drawSalesChart();
+    renderTopProducts();
+    renderLowStock();
+  }
+
+  // ---------- Role-based sidebar (module 1: dashboard only is functional) ----------
+  const PERMISSIONS = {
+    Administrador: ['dashboard','comanda','produtos','caixa','estoque','relatorios','clientes','config'],
+    Atendente: ['dashboard','comanda','caixa']
+  };
+  function applyRolePermissions(role){
+    const allowed = PERMISSIONS[role] || [];
+    document.querySelectorAll('.nav-item').forEach(item=>{
+      const mod = item.dataset.mod;
+      if(mod === 'dashboard') return; // always available, always built
+      if(!allowed.includes(mod)){
+        item.classList.add('locked');
+      } else {
+        // allowed by role, but module not built yet in this phase — still show as upcoming
+        item.classList.add('locked');
+      }
+    });
+  }
+
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      if(item.classList.contains('locked')) return;
+      document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', ()=>{
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'grid';
+    document.getElementById('userInput').value = '';
+    document.getElementById('passInput').value = '';
+  });
+
+  // mobile sidebar toggle
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  document.getElementById('menuToggle').addEventListener('click', ()=>{
+    sidebar.classList.add('open'); overlay.classList.add('show');
+  });
+  overlay.addEventListener('click', ()=>{
+    sidebar.classList.remove('open'); overlay.classList.remove('show');
+  });
+
+  // ---------- Mock data render ----------
+  function renderTopProducts(){
+    const data = [
+      ['Picanha (kg)', '38 kg'],
+      ['Linguiça artesanal', '61 un'],
+      ['Carvão 5kg', '22 un'],
+      ['Cerveja long neck', '84 un'],
+      ['Costela bovina (kg)', '19 kg'],
+    ];
+    const ul = document.getElementById('topProducts');
+    ul.innerHTML = data.map((d,i)=>`
+      <li><div class="rank-num">${i+1}</div><div class="rank-name">${d[0]}</div><div class="rank-val">${d[1]}</div></li>
+    `).join('');
+  }
+
+  function renderLowStock(){
+    const data = [
+      ['Picanha Angus', '4 kg restantes'],
+      ['Carvão 5kg', '9 un restantes'],
+      ['Linguiça toscana', '6 un restantes'],
+      ['Gelo em cubo', '11 un restantes'],
+      ['Cerveja long neck', '14 un restantes'],
+    ];
+    document.getElementById('lowStockList').innerHTML = data.map(d=>`
+      <div class="stock-row"><div class="stock-dot"></div><div class="stock-name">${d[0]}</div><div class="stock-qty mono">${d[1]}</div></div>
+    `).join('');
+  }
+
+  // ---------- Vanilla canvas bar chart (no external lib) ----------
+  function drawSalesChart(){
+    const canvas = document.getElementById('salesChart');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 220 * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const labels = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+    const values = [3200, 2850, 4100, 3950, 5600, 7400, 6284.90];
+    const max = Math.max(...values) * 1.15;
+    const w = rect.width, h = 220;
+    const padL = 8, padB = 26, padT = 10;
+    const barGap = 14;
+    const barW = (w - padL*2 - barGap*(values.length-1)) / values.length;
+
+    ctx.clearRect(0,0,w,h);
+
+    // gridlines
+    ctx.strokeStyle = 'rgba(201,162,39,0.12)';
+    ctx.lineWidth = 1;
+    for(let i=0;i<=3;i++){
+      const y = padT + (h-padT-padB) * (i/3);
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w-padL, y); ctx.stroke();
+    }
+
+    values.forEach((v,i)=>{
+      const barH = (v/max) * (h-padT-padB);
+      const x = padL + i*(barW+barGap);
+      const y = h - padB - barH;
+      const grad = ctx.createLinearGradient(0,y,0,y+barH);
+      const isToday = i === values.length-1;
+      if(isToday){
+        grad.addColorStop(0, '#e8c468'); grad.addColorStop(1, '#7a2e2e');
+      } else {
+        grad.addColorStop(0, '#c9a227'); grad.addColorStop(1, '#5c4813');
+      }
+      ctx.fillStyle = grad;
+      roundRect(ctx, x, y, barW, barH, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#a89f8d';
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(labels[i], x+barW/2, h-8);
+    });
+  }
+  function roundRect(ctx,x,y,w,h,r){
+    if(h <= 0) h = 0.01;
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  window.addEventListener('resize', ()=>{
+    if(document.getElementById('app-screen').style.display === 'grid'){
+      drawSalesChart();
+    }
+  });
+</script>
+</body>
+</html>
